@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart GPA & CGPA Calculator</title>
+  
+  <!-- Font and Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-mode">
+  
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+  
+  <div class="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <span class="brand-text">SmartGPA</span>
+      </div>
+      
+      <!-- Student Card in Sidebar -->
+      <div class="sidebar-profile-card">
+        <div class="sidebar-avatar">
+          <i class="fa-solid fa-user-graduate"></i>
+        </div>
+        <div class="sidebar-profile-info">
+          <h4 id="sb-profile-name" class="profile-name">Guest Student</h4>
+          <span id="sb-profile-branch" class="profile-branch">No Branch Listed</span>
+        </div>
+        <div class="sidebar-profile-badge">
+          <span id="sb-profile-cgpa" class="badge-cgpa">CGPA: 0.00</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active" data-tab="dashboard">
+            <a href="#"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
+          </li>
+          <li class="nav-item" data-tab="gpa-calc">
+            <a href="#"><i class="fa-solid fa-calculator"></i> <span>GPA Calculator</span></a>
+          </li>
+          <li class="nav-item" data-tab="cgpa-calc">
+            <a href="#"><i class="fa-solid fa-list-check"></i> <span>CGPA Manager</span></a>
+          </li>
+          <li class="nav-item" data-tab="what-if">
+            <a href="#"><i class="fa-solid fa-circle-question"></i> <span>What-If Simulator</span></a>
+          </li>
+          <li class="nav-item" data-tab="target-planner">
+            <a href="#"><i class="fa-solid fa-bullseye"></i> <span>Target Planner</span></a>
+          </li>
+          <li class="nav-item" data-tab="analytics">
+            <a href="#"><i class="fa-solid fa-chart-line"></i> <span>Analytics</span></a>
+          </li>
+          <li class="nav-item" data-tab="reports">
+            <a href="#"><i class="fa-solid fa-file-invoice"></i> <span>Reports & Export</span></a>
+          </li>
+          <li class="nav-item" data-tab="profile-settings">
+            <a href="#"><i class="fa-solid fa-user-gear"></i> <span>Profile & Settings</span></a>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Theme">
+          <i class="fa-solid fa-moon"></i> <span class="theme-text">Dark Mode</span>
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content Panel -->
+    <main class="main-panel">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="mobile-toggle">
+          <button id="hamburger-menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
+        <div class="page-title-section">
+          <h1 id="page-title">Dashboard</h1>
+          <p id="page-subtitle" class="text-secondary">Overview of your academic standing</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="academic-standing-pill" id="standing-pill">
+            <i class="fa-solid fa-award"></i> <span id="standing-text">Average</span>
+          </div>
+          <button class="btn btn-primary" id="btn-quick-subject" title="Add quick subject to current term">
+            <i class="fa-solid fa-plus"></i> <span>Add Subject</span>
+          </button>
+        </div>
+      </header>
+      
+      <!-- Scrollable Main Container -->
+      <div class="content-body">
+        
+        <!-- ================= DASHBOARD TAB ================= -->
+        <section id="dashboard" class="tab-content active">
+          <!-- Welcome and Goal Overview Banner -->
+          <div class="welcome-banner">
+            <div class="welcome-text">
+              <h2>Welcome, <span id="banner-student-name">Scholar</span>! 👋</h2>
+              <p>Keep tracking, tweaking, and planning to secure your dream GPA.</p>
+            </div>
+            <div class="goal-progress-widget">
+              <div class="goal-info">
+                <span>Target CGPA: <strong id="dash-goal-value">0.00</strong></span>
+                <span id="dash-goal-gap">Goal status not set</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="dash-goal-progress" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Metric KPI Cards Grid -->
+          <div class="stats-grid">
+            <div class="stat-card gpa-color">
+              <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+              <div class="stat-info">
+                <h3>Semester GPA</h3>
+                <div class="stat-value" id="dash-current-gpa">0.00</div>
+                <p class="stat-desc">Based on active subjects</p>
+              </div>
+            </div>
+            
+            <div class="stat-card cgpa-color">
+              <div class="stat-icon"><i class="fa-solid fa-chart-column"></i></div>
+              <div class="stat-info">
+                <h3>Cumulative CGPA</h3>
+                <div class="stat-value" id="dash-current-cgpa">0.00</div>
+                <p class="stat-desc" id="dash-cgpa-standing">No semesters loaded</p>
+              </div>
+            </div>
+            
+            <div class="stat-card credits-color">
+              <div class="stat-icon"><i class="fa-solid fa-cubes"></i></div>
+              <div class="stat-info">
+                <h3>Credits Earned</h3>
+                <div class="stat-value" id="dash-total-credits">0</div>
+                <p class="stat-desc" id="dash-credits-completed">0 active / 0 cumulative</p>
+              </div>
+            </div>
+            
+            <div class="stat-card subjects-color">
+              <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+              <div class="stat-info">
+                <h3>Total Subjects</h3>
+                <div class="stat-value" id="dash-total-subjects">0</div>
+                <p class="stat-desc" id="dash-semester-count">0 semesters logged</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bottom Layout: Insights + Badges / Recent Items -->
+          <div class="dashboard-split">
+            <!-- Smart Insights Card -->
+            <div class="card card-glass flex-grow-2">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-brain text-accent"></i> Smart Academic Insights</h3>
+              </div>
+              <div class="card-body">
+                <ul class="insights-list" id="insights-list">
+                  <li class="empty-insight">No insights available. Add active subjects or semesters to begin analysis.</li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- Badges & Achievements -->
+            <div class="card card-glass flex-grow-1">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-medal text-warning"></i> Academic Badges</h3>
+              </div>
+              <div class="card-body">
+                <div class="badges-grid" id="badges-container">
+                  <div class="badge-item locked" title="Add your first subject to unlock!" id="badge-freshman">
+                    <div class="badge-icon"><i class="fa-solid fa-seedling"></i></div>
+                    <span class="badge-name">Freshman Start</span>
+                  </div>
+                  <div class="badge-item locked" title="Earn a perfect 10 GPA in a semester." id="badge-perfect">
+                    <div class="badge-icon"><i class="fa-solid fa-fire"></i></div>
+                    <span class="badge-name">Perfect 10</span>
+                  </div>
+                  <div class="badge-item locked" title="Accumulate more than 80 credits total." id="badge-credits">
+                    <div class="badge-icon"><i class="fa-solid fa-weight-hanging"></i></div>
+                    <span class="badge-name">Credit Titan</span>
+                  </div>
+                  <div class="badge-item locked" title="Maintain a CGPA above 9.0." id="badge-deans">
+                    <div class="badge-icon"><i class="fa-solid fa-crown"></i></div>
+                    <span class="badge-name">Dean's List</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= GPA CALCULATOR TAB ================= -->
+        <section id="gpa-calc" class="tab-content">
+          <div class="calculator-grid">
+            <!-- Add Subject Form -->
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-circle-plus text-primary"></i> Add Subject</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-add-subject" class="form-grid">
+                  <div class="form-group">
+                    <label for="sub-name">Subject Name / Code</label>
+                    <input type="text" id="sub-name" placeholder="e.g., Data Structures" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="sub-credits">Credit Hours</label>
+                    <input type="number" id="sub-credits" min="1" max="15" value="3" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="sub-grade">Expected/Earned Grade</label>
+                    <select id="sub-grade" required>
+                      <option value="A+" selected>A+ (10)</option>
+                      <option value="A">A (9)</option>
+                      <option value="B+">B+ (8)</option>
+                      <option value="B">B (7)</option>
+                      <option value="C">C (6)</option>
+                      <option value="D">D (5)</option>
+                      <option value="F">F (0)</option>
+                    </select>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-plus"></i> Add to Semester
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Active Subjects Display -->
+            <div class="card card-glass double-width">
+              <div class="card-header space-between">
+                <h3><i class="fa-solid fa-book text-secondary"></i> Current Semester Subjects</h3>
+                <div class="card-actions">
+                  <button id="btn-save-semester" class="btn btn-success btn-sm">
+                    <i class="fa-solid fa-floppy-disk"></i> Save to History
+                  </button>
+                  <button id="btn-clear-subjects" class="btn btn-danger btn-sm">
+                    <i class="fa-solid fa-trash-can"></i> Clear All
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <!-- Search and Filter Bar -->
+                <div class="filter-bar">
+                  <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-subjects" placeholder="Search subjects...">
+                  </div>
+                  <div class="sort-box">
+                    <label for="sort-subjects">Sort by:</label>
+                    <select id="sort-subjects">
+                      <option value="default">Date Added</option>
+                      <option value="name-asc">Name (A-Z)</option>
+                      <option value="name-desc">Name (Z-A)</option>
+                      <option value="credits-desc">Credits (High-Low)</option>
+                      <option value="grade-desc">Grade Point (High-Low)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <!-- Table View -->
+                <div class="table-responsive">
+                  <table class="table" id="subjects-table">
+                    <thead>
+                      <tr>
+                        <th>Subject Name</th>
+                        <th>Credits</th>
+                        <th>Grade</th>
+                        <th>Grade Points</th>
+                        <th>Weighted Score</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="subjects-list-body">
+                      <!-- Dynamically rendered -->
+                    </tbody>
+                  </table>
+                  
+                  <div class="empty-state" id="subjects-empty-state">
+                    <i class="fa-solid fa-book-open"></i>
+                    <p>No subjects added yet. Start by filling the form on the left.</p>
+                  </div>
+                </div>
+                
+                <!-- Live Calculation readout -->
+                <div class="gpa-live-summary">
+                  <div class="summary-metric">
+                    <span class="label">Total Credits:</span>
+                    <span class="value" id="live-total-credits">0</span>
+                  </div>
+                  <div class="summary-metric text-secondary" style="display: none;">
+                    <span class="label">Total Grade Points:</span>
+                    <span class="value" id="live-total-points">0</span>
+                  </div>
+                  <div class="summary-metric highlight">
+                    <span class="label">Semester GPA:</span>
+                    <span class="value" id="live-semester-gpa">0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= CGPA CALCULATOR / MANAGER TAB ================= -->
+        <section id="cgpa-calc" class="tab-content">
+          <div class="calculator-grid">
+            <!-- Add Semester Form -->
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-calendar-plus text-secondary"></i> Log Past Semester</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-add-semester" class="form-grid">
+                  <div class="form-group">
+                    <label for="sem-name">Semester Name</label>
+                    <input type="text" id="sem-name" placeholder="e.g., Semester 1" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="sem-credits">Total Credits Earned</label>
+                    <input type="number" id="sem-credits" min="1" max="50" placeholder="e.g., 20" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="sem-gpa">Semester GPA</label>
+                    <input type="number" id="sem-gpa" min="0.00" max="10.00" step="0.01" placeholder="e.g., 8.75" required>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-secondary btn-block">
+                    <i class="fa-solid fa-plus"></i> Save Semester
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Semesters List -->
+            <div class="card card-glass double-width">
+              <div class="card-header space-between">
+                <h3><i class="fa-solid fa-timeline text-primary"></i> Academic Semesters Record</h3>
+                <button id="btn-clear-semesters" class="btn btn-danger btn-sm">
+                  <i class="fa-solid fa-trash-can"></i> Clear History
+                </button>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table" id="semesters-table">
+                    <thead>
+                      <tr>
+                        <th>Semester</th>
+                        <th>Credits Earned</th>
+                        <th>GPA</th>
+                        <th>Credit points</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="semesters-list-body">
+                      <!-- Dynamically rendered -->
+                    </tbody>
+                  </table>
+                  
+                  <div class="empty-state" id="semesters-empty-state">
+                    <i class="fa-solid fa-timeline"></i>
+                    <p>No logged semesters in history. Save current calculator semesters or log past terms manually.</p>
+                  </div>
+                </div>
+                
+                <!-- CGPA summary readout -->
+                <div class="cgpa-summary-card">
+                  <div class="cgpa-gauge">
+                    <div class="gauge-value" id="cgpa-grand-total">0.00</div>
+                    <div class="gauge-label">Cumulative CGPA</div>
+                  </div>
+                  <div class="cgpa-details">
+                    <div class="detail-row">
+                      <span>Semesters Completed:</span>
+                      <strong id="cgpa-total-sems">0</strong>
+                    </div>
+                    <div class="detail-row">
+                      <span>Total Cumulative Credits:</span>
+                      <strong id="cgpa-total-credits">0</strong>
+                    </div>
+                    <div class="detail-row">
+                      <span>Academic Standing:</span>
+                      <span class="standing-tag standing-none" id="cgpa-standing-badge">N/A</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= WHAT-IF SIMULATOR TAB ================= -->
+        <section id="what-if" class="tab-content">
+          <div class="simulator-layout">
+            <!-- Inputs -->
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-wand-magic-sparkles text-accent"></i> Simulate Future Grades</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-what-if" class="form-grid">
+                  <div class="form-group">
+                    <label for="wi-current-cgpa">Current CGPA</label>
+                    <input type="number" id="wi-current-cgpa" min="0.00" max="10.00" step="0.01" value="0.00" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="wi-completed-credits">Completed Credits</label>
+                    <input type="number" id="wi-completed-credits" min="0" max="300" value="0" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="wi-remaining-sems">Remaining Semesters</label>
+                    <input type="number" id="wi-remaining-sems" min="1" max="10" value="4" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="wi-expected-gpa">Expected Future GPA (Target)</label>
+                    <input type="number" id="wi-expected-gpa" min="0.00" max="10.00" step="0.01" value="8.50" required>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-accent btn-block">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> Run Simulation
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Predictions & Scenario Cards -->
+            <div class="simulator-results flex-grow-1">
+              <div class="card card-glass">
+                <div class="card-header">
+                  <h3><i class="fa-solid fa-circle-info text-info"></i> Simulation Outcome</h3>
+                </div>
+                <div class="card-body">
+                  <div class="simulation-overview-grid">
+                    <div class="sim-metric-box">
+                      <span class="label">Graduation CGPA (Predicted)</span>
+                      <div class="value text-accent" id="sim-predicted-cgpa">0.00</div>
+                    </div>
+                    <div class="sim-metric-box">
+                      <span class="label">Improvement Rate</span>
+                      <div class="value text-success" id="sim-improvement-rate">0.00%</div>
+                    </div>
+                    <div class="sim-metric-box">
+                      <span class="label">Simulated Standing</span>
+                      <div class="value text-warning" id="sim-predicted-standing">N/A</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Scenario comparison visual chart -->
+                  <div class="chart-wrapper simulation-chart-container">
+                    <canvas id="chart-whatif-scenarios"></canvas>
+                  </div>
+                  
+                  <!-- Scenarios Explanation Cards -->
+                  <h4 class="section-title">Comparative Analysis</h4>
+                  <div class="scenarios-grid">
+                    <div class="scenario-card best-case">
+                      <h5><i class="fa-solid fa-arrow-trend-up"></i> Best Case (Perfect 10)</h5>
+                      <p>If you maintain a perfect 10.0 GPA for the next semesters:</p>
+                      <div class="scenario-result" id="scenario-best-gpa">CGPA: 0.00</div>
+                    </div>
+                    
+                    <div class="scenario-card average-case">
+                      <h5><i class="fa-solid fa-arrows-left-right"></i> Target Case (Expected)</h5>
+                      <p>If you maintain your target GPA of <span id="scenario-target-expect">8.50</span>:</p>
+                      <div class="scenario-result" id="scenario-target-gpa">CGPA: 0.00</div>
+                    </div>
+                    
+                    <div class="scenario-card worst-case">
+                      <h5><i class="fa-solid fa-arrow-trend-down"></i> Passing Case (Failsafe 6.0)</h5>
+                      <p>If you score a minimum of 6.00 GPA for the remaining semesters:</p>
+                      <div class="scenario-result" id="scenario-worst-gpa">CGPA: 0.00</div>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= TARGET CGPA PLANNER TAB ================= -->
+        <section id="target-planner" class="tab-content">
+          <div class="planner-layout">
+            <!-- Target Planner Inputs -->
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-crosshairs text-warning"></i> Set Academic Target</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-target-planner" class="form-grid">
+                  <div class="form-group">
+                    <label for="tp-desired-cgpa">Desired Cumulative CGPA</label>
+                    <input type="number" id="tp-desired-cgpa" min="1.00" max="10.00" step="0.01" placeholder="e.g., 9.00" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="tp-remaining-credits">Remaining Credits to Graduate</label>
+                    <input type="number" id="tp-remaining-credits" min="1" max="250" placeholder="e.g., 60" required>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-warning btn-block">
+                    <i class="fa-solid fa-calculator"></i> Calculate Required Grades
+                  </button>
+                </form>
+                
+                <div class="goal-recommendation-box mt-4" id="target-recommendations">
+                  <h4 class="text-warning mb-2"><i class="fa-solid fa-lightbulb"></i> Goal Tips</h4>
+                  <p class="text-secondary" id="target-tips-text">Set your target CGPA and remaining credits above to get tailored recommendations.</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Result Gauges & Progress status -->
+            <div class="planner-results flex-grow-1">
+              <div class="card card-glass h-100">
+                <div class="card-header">
+                  <h3><i class="fa-solid fa-clipboard-check text-success"></i> Feasibility Analysis</h3>
+                </div>
+                <div class="card-body planner-results-body">
+                  <div class="feasibility-display">
+                    
+                    <div class="circular-progress-wrapper">
+                      <!-- Circular SVG Gauge -->
+                      <svg class="progress-circle" viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="40"></circle>
+                        <circle class="fill" id="gauge-required-gpa-fill" cx="50" cy="50" r="40" style="stroke-dashoffset: 251.2"></circle>
+                      </svg>
+                      <div class="circular-progress-text">
+                        <span class="value" id="planner-required-gpa">0.00</span>
+                        <span class="label">Required GPA</span>
+                      </div>
+                    </div>
+                    
+                    <div class="feasibility-status-card">
+                      <h4 class="mb-1">Target Feasibility:</h4>
+                      <div class="status-pill status-uncalculated" id="planner-feasibility-tag">Uncalculated</div>
+                      <p class="mt-2 text-secondary" id="planner-feasibility-summary">
+                        Please submit your target grades on the left panel.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- Motivational Milestone / Progress scale -->
+                  <div class="progress-milestone-panel mt-4">
+                    <h4 class="mb-3">Distance to Target</h4>
+                    <div class="progress-milestone-bar">
+                      <div class="marker start">Current: <span id="tp-marker-current">0.00</span></div>
+                      <div class="marker end">Goal: <span id="tp-marker-goal">0.00</span></div>
+                      <div class="milestone-track">
+                        <div class="milestone-fill" id="tp-milestone-fill" style="width: 0%"></div>
+                      </div>
+                    </div>
+                    <div class="milestone-message mt-3" id="tp-milestone-msg">
+                      Enter your current semesters in CGPA Manager to compare where you stand.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= ANALYTICS TAB ================= -->
+        <section id="analytics" class="tab-content">
+          <!-- Main dynamic chart layout -->
+          <div class="analytics-grid">
+            <div class="card card-glass double-width">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-chart-line text-accent"></i> CGPA Growth vs Semester GPA Trend</h3>
+              </div>
+              <div class="card-body chart-wrapper">
+                <canvas id="chart-gpa-trend"></canvas>
+              </div>
+            </div>
+            
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-chart-pie text-secondary"></i> Grade Distribution</h3>
+              </div>
+              <div class="card-body chart-wrapper">
+                <canvas id="chart-grade-dist"></canvas>
+              </div>
+            </div>
+            
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-chart-bar text-success"></i> Credits Contribution per Semester</h3>
+              </div>
+              <div class="card-body chart-wrapper">
+                <canvas id="chart-credits-sems"></canvas>
+              </div>
+            </div>
+            
+            <div class="card card-glass double-width">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-chart-simple text-primary"></i> Grade Point Frequencies</h3>
+              </div>
+              <div class="card-body chart-wrapper">
+                <canvas id="chart-grade-frequency"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= REPORTS & EXPORT TAB ================= -->
+        <section id="reports" class="tab-content">
+          <div class="reports-layout">
+            <div class="card card-glass info-panel-side">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-file-pdf text-danger"></i> Generate Report Sheet</h3>
+              </div>
+              <div class="card-body">
+                <p class="text-secondary mb-3">Download a clean, printable PDF report of your current GPA and semester-wise transcripts. Perfect for student records or sharing with academic advisors.</p>
+                
+                <div class="report-settings mb-4">
+                  <div class="form-group">
+                    <label><input type="checkbox" id="rep-include-insights" checked> Include Smart Insights</label>
+                  </div>
+                  <div class="form-group">
+                    <label><input type="checkbox" id="rep-include-active" checked> Include active semester subjects</label>
+                  </div>
+                </div>
+                
+                <button id="btn-print-report" class="btn btn-danger btn-block">
+                  <i class="fa-solid fa-print"></i> Print / Save as PDF
+                </button>
+              </div>
+            </div>
+            
+            <!-- Live Preview Card -->
+            <div class="card card-glass flex-grow-1 overflow-hidden">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-eye text-success"></i> Document Preview</h3>
+              </div>
+              <div class="card-body report-preview-body">
+                <!-- Transcript Printable Document Shell -->
+                <div id="transcript-doc" class="transcript-paper">
+                  <!-- Header -->
+                  <div class="transcript-header">
+                    <div class="t-title-block">
+                      <h2>Smart GPA Calculator Transcript</h2>
+                      <p>Official Academic Standing Report</p>
+                    </div>
+                    <div class="t-logo">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                  </div>
+                  
+                  <div class="divider-line"></div>
+                  
+                  <!-- Student Details Row -->
+                  <div class="t-details-grid">
+                    <div><strong>Student Name:</strong> <span id="t-student-name">Scholar Guest</span></div>
+                    <div><strong>Roll/ID Number:</strong> <span id="t-student-roll">N/A</span></div>
+                    <div><strong>Major/Branch:</strong> <span id="t-student-branch">N/A</span></div>
+                    <div><strong>College Name:</strong> <span id="t-student-college">N/A</span></div>
+                    <div><strong>Graduation Year:</strong> <span id="t-student-year">N/A</span></div>
+                    <div><strong>Report Generated:</strong> <span id="t-report-date">--/--/----</span></div>
+                  </div>
+                  
+                  <div class="divider-line"></div>
+                  
+                  <!-- Academic Summary Stats -->
+                  <div class="t-summary-row">
+                    <div class="t-summary-box">
+                      <span class="label">Cumulative CGPA</span>
+                      <span class="value" id="t-summary-cgpa">0.00</span>
+                    </div>
+                    <div class="t-summary-box">
+                      <span class="label">Credits Completed</span>
+                      <span class="value" id="t-summary-credits">0</span>
+                    </div>
+                    <div class="t-summary-box">
+                      <span class="label">Semesters Logged</span>
+                      <span class="value" id="t-summary-sems">0</span>
+                    </div>
+                    <div class="t-summary-box">
+                      <span class="label">Academic Standing</span>
+                      <span class="value" id="t-summary-standing">Average</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Semester Summary Transcript -->
+                  <div class="t-section-title">Semester-wise Academic Performance</div>
+                  <table class="t-table" id="t-semesters-table">
+                    <thead>
+                      <tr>
+                        <th>Semester Name</th>
+                        <th>Credits Earned</th>
+                        <th>Semester GPA</th>
+                        <th>Quality Points (Credits &times; GPA)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="t-semesters-body">
+                      <!-- Rendered JS -->
+                    </tbody>
+                  </table>
+                  
+                  <!-- Active subjects details -->
+                  <div id="t-active-subjects-section">
+                    <div class="t-section-title">Current Semester In-Progress Subjects</div>
+                    <table class="t-table" id="t-active-table">
+                      <thead>
+                        <tr>
+                          <th>Subject Name</th>
+                          <th>Credits</th>
+                          <th>Earned Grade</th>
+                          <th>Grade Points</th>
+                        </tr>
+                      </thead>
+                      <tbody id="t-active-body">
+                        <!-- Rendered JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <!-- Insights Section -->
+                  <div id="t-insights-section">
+                    <div class="t-section-title">Academic Achievements & Recommendations</div>
+                    <ul class="t-insights-list" id="t-insights-body">
+                      <!-- Rendered JS -->
+                    </ul>
+                  </div>
+                  
+                  <!-- Signature Line -->
+                  <div class="t-footer-signature">
+                    <div class="sig-wrapper">
+                      <div class="sig-line"></div>
+                      <span>Student Signature</span>
+                    </div>
+                    <div class="sig-wrapper">
+                      <div class="sig-line"></div>
+                      <span>Date Verified</span>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= STUDENT PROFILE & SETTINGS TAB ================= -->
+        <section id="profile-settings" class="tab-content">
+          <div class="profile-layout-grid">
+            <!-- Edit Profile Card -->
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-id-card text-primary"></i> Academic Profile</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-edit-profile" class="form-grid">
+                  <div class="form-group">
+                    <label for="prof-name">Full Name</label>
+                    <input type="text" id="prof-name" placeholder="John Doe" value="Guest Student" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="prof-roll">Roll / Registration Number</label>
+                    <input type="text" id="prof-roll" placeholder="e.g., CS2024010" value="">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="prof-branch">Branch / Specialization</label>
+                    <input type="text" id="prof-branch" placeholder="e.g., Computer Science Engineering" value="">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="prof-college">College / University</label>
+                    <input type="text" id="prof-college" placeholder="e.g., MIT University" value="">
+                  </div>
+                  
+                  <div class="form-group-row">
+                    <div class="form-group">
+                      <label for="prof-year">Graduation Year</label>
+                      <input type="number" id="prof-year" min="2000" max="2100" value="2027">
+                    </div>
+                    <div class="form-group">
+                      <label for="prof-target">Desired Goal (CGPA)</label>
+                      <input type="number" id="prof-target" min="1.0" max="10.0" step="0.1" value="9.0">
+                    </div>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Student Profile
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Data backups and resetting -->
+            <div class="card card-glass">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-database text-warning"></i> Data Backups & Reset</h3>
+              </div>
+              <div class="card-body">
+                <p class="text-secondary mb-3">All your GPA transcripts are stored locally in your browser cache. You can backup your academic details or restore them on another machine using the utilities below.</p>
+                
+                <div class="data-actions-vertical">
+                  <!-- Export JSON button -->
+                  <div class="backup-option">
+                    <h5>Export Academic Records</h5>
+                    <p class="text-secondary text-sm">Download all subjects, logged semesters, and profile details in JSON format.</p>
+                    <button id="btn-export-json" class="btn btn-success mt-2">
+                      <i class="fa-solid fa-file-export"></i> Download Backup File
+                    </button>
+                  </div>
+                  
+                  <div class="divider-line my-3"></div>
+                  
+                  <!-- Import JSON Button/Input -->
+                  <div class="backup-option">
+                    <h5>Import Academic Records</h5>
+                    <p class="text-secondary text-sm mb-2">Upload a previously saved `.json` file to restore your academic dashboard.</p>
+                    <div class="file-upload-wrapper">
+                      <button class="btn btn-secondary file-upload-btn">
+                        <i class="fa-solid fa-file-import"></i> Choose JSON File
+                      </button>
+                      <input type="file" id="import-json-file" accept=".json">
+                    </div>
+                  </div>
+                  
+                  <div class="divider-line my-3"></div>
+                  
+                  <!-- Reset Button -->
+                  <div class="backup-option">
+                    <h5 class="text-danger">Reset All Cache Data</h5>
+                    <p class="text-secondary text-sm">Permanently wipe all student profile data, calculator subjects, and semester history. This action is irreversible.</p>
+                    <button id="btn-reset-data" class="btn btn-danger mt-2">
+                      <i class="fa-solid fa-triangle-exclamation"></i> Delete & Reset Calculator
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+    </main>
+  </div>
+  
+  <!-- QUICK SUBJECT MODAL (Shared / Dynamic Modal Dialog) -->
+  <div class="modal-overlay" id="quick-subject-modal">
+    <div class="modal-content card-glass">
+      <div class="modal-header">
+        <h3 id="modal-title-text"><i class="fa-solid fa-book-medical"></i> Quick Add Subject</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="modal-subject-form" class="form-grid">
+          <input type="hidden" id="modal-edit-id" value="">
+          
+          <div class="form-group">
+            <label for="modal-sub-name">Subject Name</label>
+            <input type="text" id="modal-sub-name" placeholder="e.g., Computer Networks" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="modal-sub-credits">Credit Hours</label>
+            <input type="number" id="modal-sub-credits" min="1" max="15" value="3" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="modal-sub-grade">Grade Value</label>
+            <select id="modal-sub-grade" required>
+              <option value="A+">A+ (10)</option>
+              <option value="A">A (9)</option>
+              <option value="B+">B+ (8)</option>
+              <option value="B">B (7)</option>
+              <option value="C">C (6)</option>
+              <option value="D">D (5)</option>
+              <option value="F">F (0)</option>
+            </select>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-block mt-3" id="modal-submit-btn">
+            <i class="fa-solid fa-plus"></i> Save Subject
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="app.js"></script>
+  <script src="charts.js"></script>
+</body>
+</html>
